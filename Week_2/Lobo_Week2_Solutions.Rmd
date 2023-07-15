@@ -18,13 +18,16 @@ Read the sales_pipe.txt file into an R data frame as sales.
 ```{r}
 # Your code here
 
-#first call the libraries needed for the following code. Using read.delim() will read the data based on the selected seperator,  which in this case is a pipe symbol
+#first call the libraries needed for the following code.
 
 library(stringr)
 library(lubridate)
 library(forcats)
 
-sales_pipe = read.delim("/Users/axtonpulliam/Documents/DSE5002/Week_2/Data/sales_pipe.txt",   stringsAsFactors=FALSE, sep ="|")
+#Using read.delim() will read the data based on the selected seperator, which in this case is a pipe symbol. Using file.choose() will let  you choose the file you want to use. This is better to use than the file path as if you use this code on a different computer, it does not matter where the file is saved.
+#readr::guess_encoding(file.choose()) will help determine the fileEncoding which was done before writing it into the code below
+
+sales_pipe = read.delim(file.choose(), fileEncoding = "ISO-8859-1", stringsAsFactors=FALSE, sep ="|")
 ```
 
 # Exercise 2
