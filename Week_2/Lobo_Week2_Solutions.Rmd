@@ -19,15 +19,18 @@ Read the sales_pipe.txt file into an R data frame as sales.
 # Your code here
 
 #first call the libraries needed for the following code.
-
 library(stringr)
 library(lubridate)
 library(forcats)
 
-#Using read.delim() will read the data based on the selected seperator, which in this case is a pipe symbol. Using file.choose() will let  you choose the file you want to use. This is better to use than the file path as if you use this code on a different computer, it does not matter where the file is saved.
-#readr::guess_encoding(file.choose()) will help determine the fileEncoding which was done before writing it into the code below
+#Using read.delim() will read the data based on the selected seperator, 
+#which in this case is a pipe symbol. 
+#readr::guess_encoding(file.choose()) will help determine the 
+#fileEncoding which was done before writing it into the code below
 
-sales_pipe = read.delim(file.choose(), fileEncoding = "ISO-8859-1", stringsAsFactors=FALSE, sep ="|")
+sales_pipe = read.delim("/Users/axtonpulliam/Documents/DSE5002/Week_2/sales_pipe.txt", 
+                        fileEncoding = "ISO-8859-1", 
+                        stringsAsFactors=FALSE, sep ="|")
 ```
 
 # Exercise 2
@@ -38,7 +41,9 @@ You can extract a vector of columns names from a data frame using the colnames()
 ```{r}
 # Your code here
 
-# using the colnames() on the data in question and using box brackets will parse the data in the column number specified and  change it to thhe desired value
+# using the colnames() on the data in question and 
+#using box brackets will parse the data in the column number specified and
+#change it to thhe desired value
 
 colnames(sales_pipe) [1] = "Row.ID"
 ```
@@ -54,13 +59,15 @@ How many weeks?
 # Your code here
 
 #for Order.Date to be converted to date vector
-#find the structure of item, find if it is a date and then convert it based on the format (month, day, year in this case)
+#find the structure of item, find if it is a date and then convert it
+#based on the format (month, day, year in this case)
 str(sales_pipe$Order.Date) 
 inherits(sales_pipe$Order.Date,  c("Date"))
 sales_pipe$Order.Date = as.Date(sales_pipe$Order.Date, format = '%m/%d/%Y') 
 
 #to convert ship.date to date vectors
-#find thhe structure of the item, find if it is a date and then convert it based on the format (month as a string, day,  yeaar in this case)
+#find the structure of the item, find if it is a date and then 
+#convert it based on the format (month as a string, day, year in this case)
 str(sales_pipe$Ship.Date)
 inherits(sales_pipe$Ship.Date, c("Date"))
 sales_pipe$Ship.Date = as.Date(sales_pipe$Ship.Date, format = '%B %d %Y') 
@@ -70,7 +77,8 @@ sales_pipe$Ship.Date = as.Date(sales_pipe$Ship.Date, format = '%B %d %Y')
 oldest = min(sales_pipe$Order.Date) 
 recent = max(sales_pipe$Order.Date) 
 
-#find number of days b/w oldest and newest order using difftime. Set the units to the desired output of time
+#find number of days b/w oldest and newest order using difftime. 
+#Set the units to the desired output of time
 day_diff = difftime(recent, oldest, units = "days")
 day_diff
 cat("Time difference of", time_length(day_diff, "year"), "years\n") 
@@ -99,12 +107,15 @@ You will need to split the customer name into first and last name segments and t
 # Your code here
 
 #Create two new columns for the first and last names based off the customer.name column
-#Split the customer.name column into two segments, seperated by a space. Paste the first column of customer.name into a new column aas thhe first names and the same with the second column for the last names.
-temp_char  = stringr::str_split_fixed(string = sales_pipe$Customer.Name, pattern = " ", n = 2) 
+#Split the customer.name column into two segments, seperated by a space. 
+#Paste the first column of customer.name into a new column as the first names 
+#and the same with the second column for the last names.
+temp_char=stringr::str_split_fixed(string = sales_pipe$Customer.Name, pattern = " ", n = 2) 
 sales_pipe$Customer.First.Name = paste(temp_char[,1], sep=" ") 
 sales_pipe$Customer.Last.Name = paste(temp_char[,2], sep=" ") 
 
-#find all the customers with first name Bill, then count how many there are with the length option
+#find all the customers with first name Bill
+#Count how many there are with the length option
 length(which(sales_pipe$Customer.First.Name=='Bill')) 
 ```
 
@@ -114,7 +125,8 @@ How many mentions of the word 'table' are there in the Product.Name column?
 
 ```{r}
 # Your code here
-#Use grep to pattern match the  word "table". Use the length operation to find hhow many occurances of the word there are
+#Use grep to pattern match the  word "table". 
+#Use the length operation to find how many occurances of the word there are
 length(grep("table", sales_pipe$Product.Name))
 ```
 
@@ -123,7 +135,8 @@ Create a table of counts for each state in the sales data. The counts table shou
 
 ```{r}
 # Your code here
-#use the table operation to make a table of the states column. This will automatically be made in alphabetical order
+#use the table operation to make a table of the states column. 
+#This will automatically be made in alphabetical order
 table(sales_pipe$State)
 ```
 
@@ -132,7 +145,9 @@ Create an alphabetically ordered barplot for each sales Category in the State of
 
 ```{r}
 # Your code here
-#use the barplot operation to make a chart of the category sales of Texas (specified  by the box brackets). This automatically plots in alphabetical order
+#use the barplot operation to make a chart of the category sales
+#Texas state is specified  by the box brackets
+#This automatically plots in alphabetical order
 barplot(table(sales_pipe$Category[sales_pipe$State  ==  "Texas"]))
 
 ```
@@ -143,7 +158,7 @@ Find the average profit by region.
 
 ```{r}
 # Your code here
-#Use the aggregate function to provide a summary statistic of the mean for the specified column. 
+#Use the aggregate function to provide a summary statistic of the mean of the column. 
 aggregate(sales_pipe$Profit, list(sales_pipe$Region), mean)
 ```
 
@@ -154,7 +169,9 @@ Find the average profit by order year.
 ```{r}
 # Your code here
 
-#split the order date and create a new column with just the order year. Split the Order.Date column into three segments, seperated by a "-". Paste the first segment of the split column into a new column named Order.Year
+#split the order date and create a new column with just the order year. 
+#Split the Order.Date column into three segments, seperated by a "-". 
+#Paste the first segment of the split column into a new column named Order.Year
 temp_char  = stringr::str_split_fixed(string = sales_pipe$Order.Date, pattern = "-", n =3) 
 sales_pipe$Order.Year = paste(temp_char[,1], sep="-") 
 
