@@ -46,8 +46,12 @@ Only one valid answer exists.
 ```{r}
 two_sum <- function(nums_vector,target){
   #your code here
-  possible_values  = numeric()
   
+  #creaate an empty vector
+  possible_values  = c()
+  
+  #use a for  loop within a for loop to iterate through the given vector 
+  #add any numbers that sum to the target to the empty list created
   for (i in seq_along(nums_vector)) {
     for (j in seq_along(nums_vector)) {
       if (nums_vector[i] + nums_vector[j] == target) {
@@ -55,17 +59,16 @@ two_sum <- function(nums_vector,target){
       }
     }
   }
- 
+
   print(possible_values)
 
 }
-
 
 # Test code
 nums_vector <- c(5,7,12,34,6,10,8,9)
 target <- 13
  
-two_sum(nums_vector,target)
+two_sum(nums_vector, target)
 #expected answers
 #[1] 1 7
 #[1] 2 5
@@ -83,32 +86,34 @@ Loop the array once to make a hash map of the value to its index. Then loop agai
 ```{r}
 library(hash)
 
-two_sum = function(nums_vector,target){
+two_sum_hash = function(nums_vector,target){
   #your code here
-  hash_keys = hash()
-  possible_values = c()
-  hash_work = 0
-
-  for (i in nums_vector) {
-    hash_keys[i] = (target - i)
-    hash_work = hash_work + 1
+  
+  #create the empty list for the hash loop and for the result
+  hash_keys = list()
+  possible_values = list()
+  
+  #iterate through the number vector set and create a dictionary for key value pairs
+  #add the key value pairs that sum to the target to the empty list
+  for (i in seq_along(nums_vector)){
+    start_value  = as.character(nums_vector[i])
+    complement = as.character(target - nums_vector[i])
+    hash_keys[[(start_value)]] = complement
+    
+  if ((complement) %in% names(hash_keys) && hash_keys[[complement]] != i){
+    possible_values[[length(possible_values) + 1]]  = c(start_value, complement)
+   }
   }
-  print(hash_keys)
-  for(j in c(hash_keys[2])) {
-    hash_work = hash_work + 1
-    if ((j %in% nums_vector)) {
-      possible_values = c(possible_values, paste(i, j, sep=' '))
-    }
-  }
-  print(possible_values)
+  return(possible_values)
+   
 }
 
 
 # Test code
-nums_vector = c(5,7,12,34,6,10,8,9)
-target = 15
- 
-two_sum(nums_vector,target)
+ nums_vector <- c(5, 7, 12, 34, 6, 10, 8, 9)
+ target <- 15
+ two_sum_hash(nums_vector, target)
+
 #expected answers
 #[1] 10  5
 #[1] 8 7
