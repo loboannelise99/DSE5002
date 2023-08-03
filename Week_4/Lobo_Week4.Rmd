@@ -1,0 +1,209 @@
+---
+title: "Week 4 Exercises"
+author: "Annelise Lobo"
+date: "July 19, 2023"
+output: pdf_document
+---
+
+Please complete all exercises below. You may use any library that we have covered in class. The data we will be using comes from the tidyr package, so you must use that. 
+
+1) Examine the who and population data sets that come with the tidyr library. the who data is not tidy, you will need to reshape the new_sp_m014 to newrel_f65 columns to long format retaining country, iso2, iso3, and year. The data in the columns you are reshaping contains patterns described in the details section below. You will need to assign three columns: diagnosis, gender, and age to the patterns described in the details. 
+
+Your tidy data should look like the following:
+  country     iso2  iso3   year diagnosis gender age   count
+  <chr>       <chr> <chr> <int> <chr>     <chr>  <chr> <int>
+1 Afghanistan AF    AFG    1980 sp        m      014      NA
+2 Afghanistan AF    AFG    1980 sp        m      1524     NA
+3 Afghanistan AF    AFG    1980 sp        m      2534     NA
+4 Afghanistan AF    AFG    1980 sp        m      3544     NA
+5 Afghanistan AF    AFG    1980 sp        m      4554     NA
+6 Afghanistan AF    AFG    1980 sp        m      5564     NA
+
+Details
+The data uses the original codes given by the World Health Organization. The column names for columns five through 60 are made by combining new_ to a code for method of diagnosis (rel = relapse, sn = negative pulmonary smear, sp = positive pulmonary smear, ep = extrapulmonary) to a code for gender (f = female, m = male) to a code for age group (014 = 0-14 yrs of age, 1524 = 15-24 years of age, 2534 = 25 to 34 years of age, 3544 = 35 to 44 years of age, 4554 = 45 to 54 years of age, 5564 = 55 to 64 years of age, 65 = 65 years of age or older).
+
+*Note: use data(who) and data(population) to load the data into your environment.*
+*Use the arguments cols, names_to, names_pattern, and values_to.*
+*Your regex should be = ("new_?(.*)_(.)(.*)")*
+
+https://tidyr.tidyverse.org/reference/who.html
+
+```{r}
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+
+#your code here
+#load the data from the tidyr library
+data("who")
+data("population")
+
+#change the data from wide to long
+who_long = who %>%
+  pivot_longer(
+    cols = (new_sp_m014:newrel_f65),
+    names_to = c("diagnosis", "gender", "age"), 
+    names_pattern = "new_?(.*)_(.)(.*)",
+    values_to = "count") 
+
+who_long
+```
+
+2) There are two common keys between the data sets, with who as the left table, join the population data by country and year so that the population is available within the who dataset. 
+
+
+```{r}
+# your code here
+#use left_join to combine who_long to population in the who data set
+who = left_join(who_long, population, by = c("country", "year"))
+who
+```
+
+3) Split the age column into two columns, min age and max age. Notice that there is no character separator. Check the documentation with ?separate to understand other ways to separate the age column. Keep in mind that 0 to 14 is coded as 014 (3 characters) and the other age groups are coded with 4 characters. 65 only has two characters, but we will ignore that until the next prolem. 
+
+```{r}
+# your code here
+#use separate to split the age column in the who data
+who = who %>% 
+  separate(col = "age", 
+           into = c("min_age", "max_age"), 
+           sep = -2,
+           fill = "left")
+who
+```
+
+4) Since we ignored the 65+ group in the previous problem we will fix it here. If you examine the data you will notice that 65 was placed into the max_age column and there is no value for min_age for those records. To fix this use mutate() in order to replace the blank value in the min_age column with the value from the max_age column and another mutate to replace the 65 in the max column with an Inf. Be sure to keep the variables as character vectors.  
+
+```{r}
+# your code here
+#change the min age to be 65 and the max age to be inf
+library(dplyr)
+who = who %>%
+  mutate(min_age = case_when(max_age == 65 ~ as.character(65), .default = as.character(min_age))) %>%
+  mutate(max_age = case_when(max_age == 65 ~ as.character("Inf"), .default = as.character(max_age)))
+who
+```
+
+5) Find the count per diagnosis for males and females.
+
+*See ?sum for a hint on resolving NA values.*
+
+```{r}
+# your code here
+#find the count per gender and diagnosis by using na.rm to remove the NA values
+who_gender = who %>%
+   group_by(diagnosis, gender) %>%
+   summarise(total_non_na = sum(count, na.rm = TRUE))
+who_gender
+```
+
+6) Now create a plot using ggplot and geom_col where your x axis is gender, your y axis represents the counts, and facet by diagnosis. Be sure to give your plot a title and resolve the axis labels. 
+
+```{r}
+#your code here
+
+#create the legend abreviations
+diagnosis_abrevs = list("rel" = "relapse", "sn" = "negative pulmonary smear", "sp" = "positive pulmonary smear", "ep" = "extrapulmonary")
+diagnosis_labeller = function(variable,value){
+  return(diagnosis_abrevs[value])}
+
+#make a bar plot and adjust the labels and scales to look better
+who_gender %>%  
+  ggplot(aes(x = gender, fill = gender))+
+  geom_bar()+
+  geom_bar(aes(weight = total_non_na))+
+  facet_wrap(~diagnosis, labeller = diagnosis_labeller)+
+  theme(axis.text.y = element_text(angle = 45))+
+  scale_x_discrete(labels = c("Female", "Male"))+
+  labs(x='Gender',
+       y='Counts',
+       title='Counts by Gender')
+  
+```
+
+7) Find the percentage of population by year, gender, and diagnosis. Be sure to remove rows containing NA values. 
+
+```{r}
+# your code here
+#find the count of diagnosis by gender and year
+percent_population = who %>%
+   group_by(diagnosis, gender, year) %>%
+   summarise(total_count_percent = sum(count, na.rm = TRUE)/mean(population, na.rm=TRUE)) %>%
+   drop_na()
+  
+percent_population
+
+
+```
+
+8) Create a line plot in ggplot where your x axis contains the year and y axis contains the percent of world population. Facet this plot by diagnosis with each plot stacked vertically. You should have a line for each gender within each facet. Be sure to format your y axis and give your plot a title. 
+
+```{r}
+# your code here
+#create the titles for the diagnosis
+diagnosis_abrevs = list("rel" = "relapse", "sn" = "negative \n pulmonary \n smear", "sp" = "positive \n pulmonary \n smear", "ep" = "extra-\n pulmonary")
+diagnosis_labeller = function(variable,value){
+  return(diagnosis_abrevs[value])}
+
+#create the tittle for gender
+gender_abrevs = list("m" = "Male", "f" = "Female")
+gender_labeller = function(variable, value){
+  return(gender_abrevs[value])
+}
+
+percent_population %>%  
+  ggplot(aes(year, total_count_percent, color = gender))+
+  geom_line()+
+  facet_grid((diagnosis ~ gender), labeller = labeller(diagnosis = diagnosis_labeller, gender = gender_labeller))+
+  scale_y_continuous(breaks=c(0, 10, 20, 30, 40, 50, 60, 70, 80))+
+  scale_y_continuous(labels=scales::percent_format()) +
+  labs(x='Year',
+       y='% World Population',
+       title='%World Population by Year')
+```
+
+9) Now unite the min and max age variables into a new variable named age_range. Use a '-' as the separator. 
+
+```{r}
+# your code here
+united = who %>%
+  unite("age_range", min_age:max_age, sep = "-", remove = TRUE)
+```
+
+10) Find the percentage contribution of each age group by diagnosis. You will first need to find the count of all diagnoses then find the count of all diagnoses by age group. Join the former to the later and calculate the percent of each age group. Plot these as a geom_col where the x axis is the diagnosis, y axis is the percent of total, and faceted by age group. 
+
+```{r}
+# your code here
+
+#find the total number of people with diagnosis
+who_percent_left = united %>%
+   group_by(diagnosis) %>%
+   summarise(total_diagnosis_type = sum(count, na.rm=TRUE))
+  # summarise(total_diagnosis = sum(total_diagnosis))
+
+#segment the people by age group and type of diagnosis
+who_percent_right = united %>%
+   group_by(diagnosis, age_range) %>%
+   summarise(total_diagnosis_by_age = sum(count, na.rm = TRUE))
+
+#combine the two data frames
+
+who_percent_right = who_percent_right %>% right_join(who_percent_left, by = join_by(diagnosis))
+
+#find the percentage of ages with specific diagnosis
+who_percent_right = who_percent_right %>%
+    group_by(total_diagnosis_by_age, total_diagnosis_type, age_range, diagnosis) %>%
+    mutate(percent_age_diagnosis = total_diagnosis_by_age / total_diagnosis_type)
+
+#plot the percent of people with diagnosis faceted by age group
+who_percent_right %>%
+  ggplot(aes(diagnosis, percent_age_diagnosis, fill = diagnosis))+
+  geom_col()+
+  facet_wrap(~age_range, nrow = 4)+
+  theme(axis.text.x = element_text(angle = 35))+
+  scale_y_continuous(labels=scales::percent_format()) +
+  labs(x='Diagnosis',
+       y='Percent Population with Diagnosis',
+       title='Percent Diagnosis by Age Group')
+
+```
