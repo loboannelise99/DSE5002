@@ -30,7 +30,7 @@ Salary_SE_M = total_df %>%
   select(Cost_living_index, salary_in_usd, company_size, experience_level, company_location, employment_type) %>%
   filter(experience_level == c("SE") & employment_type == c("FT") & Cost_living_index <= "61") %>%
   filter(company_size == c("L", "M"))
-6
+
 aggregate(salary_in_usd ~ company_size + company_location, data = Salary_SE_M, range)
 
 #Find the mean salary based on SE level experience for FT employees
@@ -149,3 +149,17 @@ salary_groups %>%
        y="Salary in USD")
 
 
+# library(stringr)
+# library(countrycode)
+# 
+# full_data = read.csv("R Project/data.csv", stringsAsFactors = FALSE)
+# cost_index_data = readxl::read_excel("R Project/cost_of_living.xlsx")
+# 
+# #add thhe cost of living data to the current dataset by merging on the country code variable
+# cost_index_data$employee_residence <- paste(countrycode(cost_index_data$Country, "country.name", "iso2c"))
+# total = merge(full_data, cost_index_data, by="employee_residence")
+# 
+# #Find salaries based on seniority level
+# 
+# #barplot(table(data$experience_level))
+#  5c52fbeaa10c8eb5020e3dae9e3218ddd58f06e5
