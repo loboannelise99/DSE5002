@@ -12,6 +12,8 @@ library(lubridate)
 
 #Data to read into code; contains the data supplies as well as
 #data regarding a countries cost of living
+#Using file.choose allows for the data to be stored by any path on 
+#a different users PC
 full_data = read.csv(file.choose(), stringsAsFactors = FALSE)
 cost_index_data = readxl::read_excel(file.choose())
 
@@ -31,9 +33,11 @@ Salary_SE_M = total_df %>%
   filter(experience_level == c("SE") & employment_type == c("FT") & Cost_living_index <= "61") %>%
   filter(company_size == c("L", "M"))
 
+#Find the mean and range of salaries for SE level FT positions by country and company size
 aggregate(salary_in_usd ~ company_size + company_location, data = Salary_SE_M, range)
+aggregate(salary_in_usd ~ company_size + company_location, data = Salary_SE_M, mean)
 
-#Find the mean salary based on SE level experience for FT employees
+#Find the mean salary based on SE level experience for FT employees by remote ratio
 avg_salary = total_df %>%
   select(salary_in_usd, company_size, experience_level, work_year, remote_ratio, employment_type) %>%
   filter(experience_level == c("SE") & employment_type == c("FT")) %>%
@@ -53,7 +57,6 @@ salary_groups = total_df %>%
   select(salary_in_usd, company_size, experience_level, remote_ratio, Cost_living_index, job_title) %>%
   filter(experience_level == c("SE") & company_size == c("M") & job_title == c("Data Scientist"))
 
-
 #Selecting company location to be the US, SE level experience, and FT worker and M company size
 #summarized mean salary for each job group
 salary_job_title = total_df %>%
@@ -62,7 +65,13 @@ salary_job_title = total_df %>%
   group_by(job_title, company_size) %>%
   summarise(avg_by_job = mean(salary_in_usd, na.rm = TRUE))
 
+#Mean and range values of salary by experience level
+aggregate(salary_in_usd ~ experience_level, data = total_df, mean)
+aggregate(salary_in_usd ~ experience_level, data = total_df, range)
 
+#Final recommendation
+aggregate(salary_in_usd ~ company_location + company_size, data = Salary_SE_M, mean)
+aggregate(salary_in_usd ~ company_location + company_size, data = Salary_SE_M, range)
 
 #Data plots section 
 
@@ -73,7 +82,7 @@ total_df %>%
   ggplot(aes(x = Cost_living_index, y = salary_in_usd))+
   geom_point(aes(shape = company_size, col = experience_level))+
   scale_y_log10(labels=scales::dollar_format(), breaks = c(0, 20000, 50000, 75000, 100000, 150000, 200000, 300000, 400000, 500000, 600000)) +
-  scale_x_continuous(breaks = c(5, 10, 20, 30, 40, 50, 60, 70, 80, 90))+
+  scale_x_log10(breaks = c(5, 10, 20, 30, 40, 50, 60, 70, 80, 90))+
   theme(legend.position="bottom") +                                                     
   guides(col = guide_legend("Experience Level"), shape = guide_legend("Company Size"))+
   labs(x='Cost of Living Index',
@@ -136,11 +145,7 @@ avg_salary %>%
         x="Work Year",
         y="Average Salary in USD")
 
-
-#Does not work
-
-#barplot(table(data$experience_level))
-# labels and breaks for X axis text
+#barplot for the salary groups 
 salary_groups %>%
   ggplot(aes(x = salary_in_usd, fill = salary_in_usd)) +
   geom_bar() +
@@ -148,18 +153,3 @@ salary_groups %>%
        x="Data Scientest Type",
        y="Salary in USD")
 
-
-# library(stringr)
-# library(countrycode)
-# 
-# full_data = read.csv("R Project/data.csv", stringsAsFactors = FALSE)
-# cost_index_data = readxl::read_excel("R Project/cost_of_living.xlsx")
-# 
-# #add thhe cost of living data to the current dataset by merging on the country code variable
-# cost_index_data$employee_residence <- paste(countrycode(cost_index_data$Country, "country.name", "iso2c"))
-# total = merge(full_data, cost_index_data, by="employee_residence")
-# 
-# #Find salaries based on seniority level
-# 
-# #barplot(table(data$experience_level))
-#  5c52fbeaa10c8eb5020e3dae9e3218ddd58f06e5
